@@ -50,7 +50,7 @@ import Testing
     }
 
     @Test func parseEmpty() {
-        #expect(throws: Decimal.Text.Error.self) {
+        #expect(throws: Decimal._TextError.self) {
             _ = try Decimal.Format64.text([UInt8]())
         }
     }
@@ -60,42 +60,42 @@ import Testing
     @Test func renderInteger() {
         let value: Decimal.Format64 = 42
         var buffer: [UInt8] = []
-        value.text.render.append(&buffer)
+        value.text.render(appending: &buffer)
         #expect(String(decoding: buffer, as: UTF8.self) == "42")
     }
 
     @Test func renderNegative() {
         let value: Decimal.Format64 = -123
         var buffer: [UInt8] = []
-        value.text.render.append(&buffer)
+        value.text.render(appending: &buffer)
         #expect(String(decoding: buffer, as: UTF8.self) == "-123")
     }
 
     @Test func renderZero() {
         let value: Decimal.Format64 = 0
         var buffer: [UInt8] = []
-        value.text.render.append(&buffer)
+        value.text.render(appending: &buffer)
         #expect(String(decoding: buffer, as: UTF8.self) == "0")
     }
 
     @Test func renderInfinity() {
         let value = Decimal.Format64.infinity()
         var buffer: [UInt8] = []
-        value.text.render.append(&buffer)
+        value.text.render(appending: &buffer)
         #expect(String(decoding: buffer, as: UTF8.self) == "Infinity")
     }
 
     @Test func renderNegativeInfinity() {
         let value = Decimal.Format64.infinity(sign: .negative)
         var buffer: [UInt8] = []
-        value.text.render.append(&buffer)
+        value.text.render(appending: &buffer)
         #expect(String(decoding: buffer, as: UTF8.self) == "-Infinity")
     }
 
     @Test func renderNaN() {
         let value = Decimal.Format64.nan()
         var buffer: [UInt8] = []
-        value.text.render.append(&buffer)
+        value.text.render(appending: &buffer)
         #expect(String(decoding: buffer, as: UTF8.self) == "NaN")
     }
 }

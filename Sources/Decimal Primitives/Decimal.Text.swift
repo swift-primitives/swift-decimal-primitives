@@ -1,12 +1,6 @@
 extension Decimal {
-    /// Namespace for text operations
-    public enum Text { }
-}
-
-// MARK: - Text Accessor
-
-extension Decimal.Text {
-    public struct Accessor<Value> {
+    /// Text accessor for decimal values - provides parsing and rendering operations.
+    public struct Text<Value> {
         @usableFromInline
         let base: Value
 
@@ -17,51 +11,58 @@ extension Decimal.Text {
     }
 }
 
-extension Decimal.Text.Accessor: Sendable where Value: Sendable { }
+extension Decimal.Text: Sendable where Value: Sendable { }
 
 // MARK: - Parse Type
 
 extension Decimal.Text {
-    public struct Parse<Value> {
+    /// Static parser for creating decimal values from text.
+    public struct Parse {
         @usableFromInline
         internal init() { }
     }
 }
 
-extension Decimal.Text.Parse: Sendable where Value: Sendable { }
+extension Decimal.Text.Parse: Sendable { }
 
 // MARK: - Format64 Text Accessor
 
 extension Decimal.Format64 {
-    public var text: Decimal.Text.Accessor<Self> {
-        Decimal.Text.Accessor(self)
+    /// Access text operations for this decimal value.
+    public var text: Decimal.Text<Self> {
+        Decimal.Text(self)
     }
 
-    public static var text: Decimal.Text.Parse<Self> {
-        Decimal.Text.Parse()
+    /// Static text parser for Format64.
+    public static var text: Decimal.Text<Self>.Parse {
+        Decimal.Text<Self>.Parse()
     }
 }
 
 // MARK: - Format32 Text Accessor
 
 extension Decimal.Format32 {
-    public var text: Decimal.Text.Accessor<Self> {
-        Decimal.Text.Accessor(self)
+    /// Access text operations for this decimal value.
+    public var text: Decimal.Text<Self> {
+        Decimal.Text(self)
     }
 
-    public static var text: Decimal.Text.Parse<Self> {
-        Decimal.Text.Parse()
+    /// Static text parser for Format32.
+    public static var text: Decimal.Text<Self>.Parse {
+        Decimal.Text<Self>.Parse()
     }
 }
 
 // MARK: - Format128 Text Accessor
 
 extension Decimal.Format128 {
-    public var text: Decimal.Text.Accessor<Self> {
-        Decimal.Text.Accessor(self)
+    /// Access text operations for this decimal value.
+    public var text: Decimal.Text<Self> {
+        Decimal.Text(self)
     }
 
-    public static var text: Decimal.Text.Parse<Self> {
-        Decimal.Text.Parse()
+    /// Static text parser for Format128.
+    public static var text: Decimal.Text<Self>.Parse {
+        Decimal.Text<Self>.Parse()
     }
 }

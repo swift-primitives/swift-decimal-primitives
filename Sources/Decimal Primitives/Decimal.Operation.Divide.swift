@@ -3,8 +3,108 @@ extension Decimal.Operation where Value == Decimal.Format32 {
         _ other: Value,
         context: Decimal.Context = .format32
     ) -> Decimal.Outcome<Value> {
-        // TODO: Implement IEEE 754 decimal division
-        fatalError("Implementation required")
+        let a = base
+        let b = other
+
+        let resultSign: Decimal.Sign = (a.sign == b.sign) ? .positive : .negative
+
+        // 1. Handle NaN propagation
+        if a.test.signaling || b.test.signaling {
+            let payload = a.test.signaling ? Decimal.Payload(UInt64(a.extractCoefficient())) : Decimal.Payload(UInt64(b.extractCoefficient()))
+            return Decimal.Outcome(value: .nan(kind: .quiet, payload: payload), status: .invalid)
+        }
+
+        if a.test.nan {
+            return Decimal.Outcome(value: a, status: .none)
+        }
+        if b.test.nan {
+            return Decimal.Outcome(value: b, status: .none)
+        }
+
+        // 2. Handle infinity cases
+        if a.test.infinite {
+            if b.test.infinite {
+                return Decimal.Outcome(value: .nan(), status: .invalid)
+            }
+            return Decimal.Outcome(value: .infinity(sign: resultSign), status: .none)
+        }
+
+        // 3. Handle division by zero
+        if b.test.zero {
+            if a.test.zero {
+                return Decimal.Outcome(value: .nan(), status: .invalid)
+            }
+            return Decimal.Outcome(value: .infinity(sign: resultSign), status: .divide)
+        }
+
+        // 4. Handle zero dividend
+        if a.test.zero {
+            return Decimal.Outcome(value: .zero(sign: resultSign), status: .none)
+        }
+
+        // 5. x / ∞ = 0
+        if b.test.infinite {
+            return Decimal.Outcome(value: .zero(sign: resultSign), status: .none)
+        }
+
+        // 6. Extract components
+        var coeffA = UInt64(a.extractCoefficient())
+        let coeffB = UInt64(b.extractCoefficient())
+        var expA = a.extractExponent()
+        let expB = b.extractExponent()
+
+        // 7. Scale dividend for precision
+        let targetDigits = context.precision.rawValue + 2
+
+        var digitsA = 0
+        var temp = coeffA
+        while temp > 0 {
+            digitsA += 1
+            temp /= 10
+        }
+
+        let scaleUp = targetDigits + 7 - digitsA  // 7 is max digits in coeffB
+        if scaleUp > 0 {
+            for _ in 0..<scaleUp {
+                coeffA *= 10
+            }
+            expA = expA - scaleUp
+        }
+
+        // 8. Perform division
+        let quotient = coeffA / coeffB
+        let remainder = coeffA % coeffB
+
+        let resultExp = expA - expB
+
+        // 9. Round to precision
+        var status: Decimal.Status = .none
+        if remainder != 0 {
+            status = .inexact
+        }
+
+        let (finalCoeff, finalExp, roundStatus) = Value.round(
+            coefficient: quotient,
+            exponent: resultExp,
+            sign: resultSign,
+            rounding: context.rounding,
+            precision: context.precision
+        )
+        status = status.union(roundStatus)
+
+        // 10. Check for overflow
+        if finalExp > context.maxExponent {
+            return Decimal.Outcome(value: .infinity(sign: resultSign), status: status.union(.overflow))
+        }
+
+        // 11. Check for underflow
+        if finalExp < context.minExponent {
+            return Decimal.Outcome(value: .zero(sign: resultSign), status: status.union(.underflow))
+        }
+
+        // 12. Encode result
+        let result = Value.encode(sign: resultSign, exponent: finalExp, coefficient: finalCoeff)
+        return Decimal.Outcome(value: result, status: status)
     }
 
     public func divide(
@@ -145,8 +245,108 @@ extension Decimal.Operation where Value == Decimal.Format128 {
         _ other: Value,
         context: Decimal.Context = .format128
     ) -> Decimal.Outcome<Value> {
-        // TODO: Implement IEEE 754 decimal division
-        fatalError("Implementation required")
+        let a = base
+        let b = other
+
+        let resultSign: Decimal.Sign = (a.sign == b.sign) ? .positive : .negative
+
+        // 1. Handle NaN propagation
+        if a.test.signaling || b.test.signaling {
+            let payload = a.test.signaling ? Decimal.Payload(UInt64(truncatingIfNeeded: a.extractCoefficient())) : Decimal.Payload(UInt64(truncatingIfNeeded: b.extractCoefficient()))
+            return Decimal.Outcome(value: .nan(kind: .quiet, payload: payload), status: .invalid)
+        }
+
+        if a.test.nan {
+            return Decimal.Outcome(value: a, status: .none)
+        }
+        if b.test.nan {
+            return Decimal.Outcome(value: b, status: .none)
+        }
+
+        // 2. Handle infinity cases
+        if a.test.infinite {
+            if b.test.infinite {
+                return Decimal.Outcome(value: .nan(), status: .invalid)
+            }
+            return Decimal.Outcome(value: .infinity(sign: resultSign), status: .none)
+        }
+
+        // 3. Handle division by zero
+        if b.test.zero {
+            if a.test.zero {
+                return Decimal.Outcome(value: .nan(), status: .invalid)
+            }
+            return Decimal.Outcome(value: .infinity(sign: resultSign), status: .divide)
+        }
+
+        // 4. Handle zero dividend
+        if a.test.zero {
+            return Decimal.Outcome(value: .zero(sign: resultSign), status: .none)
+        }
+
+        // 5. x / ∞ = 0
+        if b.test.infinite {
+            return Decimal.Outcome(value: .zero(sign: resultSign), status: .none)
+        }
+
+        // 6. Extract components
+        var coeffA = a.extractCoefficient()
+        let coeffB = b.extractCoefficient()
+        var expA = a.extractExponent()
+        let expB = b.extractExponent()
+
+        // 7. Scale dividend for precision
+        let targetDigits = context.precision.rawValue + 2
+
+        var digitsA = 0
+        var temp = coeffA
+        while temp > 0 {
+            digitsA += 1
+            temp /= 10
+        }
+
+        let scaleUp = targetDigits + 34 - digitsA  // 34 is max digits in coeffB
+        if scaleUp > 0 {
+            for _ in 0..<scaleUp {
+                coeffA *= 10
+            }
+            expA = expA - scaleUp
+        }
+
+        // 8. Perform division
+        let quotient = coeffA / coeffB
+        let remainder = coeffA % coeffB
+
+        let resultExp = expA - expB
+
+        // 9. Round to precision
+        var status: Decimal.Status = .none
+        if remainder != 0 {
+            status = .inexact
+        }
+
+        let (finalCoeff, finalExp, roundStatus) = Value.round(
+            coefficient: quotient,
+            exponent: resultExp,
+            sign: resultSign,
+            rounding: context.rounding,
+            precision: context.precision
+        )
+        status = status.union(roundStatus)
+
+        // 10. Check for overflow
+        if finalExp > context.maxExponent {
+            return Decimal.Outcome(value: .infinity(sign: resultSign), status: status.union(.overflow))
+        }
+
+        // 11. Check for underflow
+        if finalExp < context.minExponent {
+            return Decimal.Outcome(value: .zero(sign: resultSign), status: status.union(.underflow))
+        }
+
+        // 12. Encode result
+        let result = Value.encode(sign: resultSign, exponent: finalExp, coefficient: finalCoeff)
+        return Decimal.Outcome(value: result, status: status)
     }
 
     public func divide(
