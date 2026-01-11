@@ -3,11 +3,9 @@ extension Decimal {
     /// - 34 decimal digits of precision
     /// - Exponent range: -6143 to +6144
     public struct Format128: Sendable, Hashable {
-        @usableFromInline
-        internal var high: UInt64
+        public var high: UInt64
 
-        @usableFromInline
-        internal var low: UInt64
+        public var low: UInt64
 
         public init(high: UInt64, low: UInt64) {
             self.high = high
@@ -83,8 +81,8 @@ extension Decimal.Format128 {
         Self(high: high ^ 0x8000_0000_0000_0000, low: low)
     }
 
-    @usableFromInline
-    internal func extractExponent() -> Decimal.Exponent {
+    @inlinable
+    public func extractExponent() -> Decimal.Exponent {
         // Check for special values (combination field starts with 11)
         let g0g1 = (high >> 61) & 0x3
         if g0g1 == 0x3 {
@@ -103,8 +101,8 @@ extension Decimal.Format128 {
         return Decimal.Exponent(biasedExponent - Self.bias)
     }
 
-    @usableFromInline
-    internal func extractCoefficient() -> UInt128 {
+    @inlinable
+    public func extractCoefficient() -> UInt128 {
         let g0g1 = (high >> 61) & 0x3
         if g0g1 == 0x3 {
             let g2 = (high >> 60) & 0x1
@@ -124,15 +122,15 @@ extension Decimal.Format128 {
         return (UInt128(highPart) << 64) | UInt128(low)
     }
 
-    @usableFromInline
-    internal static func coefficientMax() -> UInt128 {
+    @inlinable
+    public static func coefficientMax() -> UInt128 {
         // 10^34 - 1
         (UInt128(0x0001_ED09_BEAD_87C0) << 64) | UInt128(0x378D_8E63_FFFF_FFFF)
     }
 
     /// Encode a finite value from sign, exponent, and coefficient
-    @usableFromInline
-    internal static func encode(
+    @inlinable
+    public static func encode(
         sign: Decimal.Sign,
         exponent: Decimal.Exponent,
         coefficient: UInt128
@@ -157,87 +155,6 @@ extension Decimal.Format128 {
         }
     }
 
-    /// Round coefficient to fit in precision digits
-    @usableFromInline
-    internal static func round(
-        coefficient: UInt128,
-        exponent: Decimal.Exponent,
-        sign: Decimal.Sign,
-        rounding: Decimal.Rounding,
-        precision: Decimal.Precision
-    ) -> (coefficient: UInt128, exponent: Decimal.Exponent, status: Decimal.Status) {
-        let c = coefficient
-        var e = exponent
-        var status: Decimal.Status = .none
-
-        // Calculate number of digits
-        var digits = 0
-        var temp = c
-        while temp > 0 {
-            digits += 1
-            temp /= 10
-        }
-
-        // If coefficient fits in precision, no rounding needed
-        if digits <= precision.rawValue {
-            return (c, e, status)
-        }
-
-        // Need to round off (digits - precision) digits
-        let roundDigits = digits - precision.rawValue
-
-        // Calculate divisor
-        var divisor: UInt128 = 1
-        for _ in 0..<roundDigits {
-            divisor *= 10
-        }
-
-        let quotient = c / divisor
-        let remainder = c % divisor
-        let halfDivisor = divisor / 2
-
-        // Determine if we need to round up
-        var roundUp = false
-        switch rounding {
-        case .ceiling:
-            roundUp = remainder > 0 && sign == .positive
-        case .floor:
-            roundUp = remainder > 0 && sign == .negative
-        case .down:
-            roundUp = false
-        case .up:
-            roundUp = remainder > 0
-        case .even:
-            if remainder > halfDivisor {
-                roundUp = true
-            } else if remainder == halfDivisor {
-                roundUp = (quotient % 2) != 0
-            }
-        case .away:
-            roundUp = remainder >= halfDivisor
-        case .toward:
-            roundUp = remainder > halfDivisor
-        }
-
-        var result = quotient
-        if roundUp {
-            result += 1
-        }
-
-        if remainder > 0 {
-            status = .inexact
-        }
-
-        e = e + roundDigits
-
-        // Check if rounding caused overflow of coefficient
-        if result > coefficientMax() {
-            result /= 10
-            e = e + 1
-        }
-
-        return (result, e, status)
-    }
 }
 
 // MARK: - Test Accessor

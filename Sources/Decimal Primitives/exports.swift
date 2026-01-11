@@ -10,5 +10,4 @@
 //
 // ===----------------------------------------------------------------------===//
 
-// Decimal Primitives has zero external dependencies.
-// All types are defined within this module.
+@_exported public import IEEE_754

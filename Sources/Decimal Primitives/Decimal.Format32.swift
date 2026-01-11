@@ -3,8 +3,7 @@ extension Decimal {
     /// - 7 decimal digits of precision
     /// - Exponent range: -95 to +96
     public struct Format32: Sendable, Hashable {
-        @usableFromInline
-        internal var bits: UInt32
+        public var bits: UInt32
 
         public init(bits: UInt32) {
             self.bits = bits
@@ -80,8 +79,8 @@ extension Decimal.Format32 {
         Self(bits: bits ^ 0x8000_0000)
     }
 
-    @usableFromInline
-    internal func extractExponent() -> Decimal.Exponent {
+    @inlinable
+    public func extractExponent() -> Decimal.Exponent {
         // Check for special values (combination field starts with 11)
         let g0g1 = (bits >> 29) & 0x3
         if g0g1 == 0x3 {
@@ -101,8 +100,8 @@ extension Decimal.Format32 {
         return Decimal.Exponent(biasedExponent - Self.bias)
     }
 
-    @usableFromInline
-    internal func extractCoefficient() -> UInt32 {
+    @inlinable
+    public func extractCoefficient() -> UInt32 {
         let g0g1 = (bits >> 29) & 0x3
         if g0g1 == 0x3 {
             // Could be Form 2 or special value
@@ -121,16 +120,16 @@ extension Decimal.Format32 {
         return bits & 0x007F_FFFF
     }
 
-    @usableFromInline
-    internal static func coefficientMax() -> UInt32 {
+    @inlinable
+    public static func coefficientMax() -> UInt32 {
         // 10^7 - 1 = 9999999
         9_999_999
     }
 
     /// Encode a finite value from sign, exponent, and coefficient
     /// - Precondition: coefficient <= coefficientMax()
-    @usableFromInline
-    internal static func encode(
+    @inlinable
+    public static func encode(
         sign: Decimal.Sign,
         exponent: Decimal.Exponent,
         coefficient: UInt32
@@ -156,87 +155,6 @@ extension Decimal.Format32 {
         }
     }
 
-    /// Round coefficient to fit in precision digits
-    @usableFromInline
-    internal static func round(
-        coefficient: UInt64,
-        exponent: Decimal.Exponent,
-        sign: Decimal.Sign,
-        rounding: Decimal.Rounding,
-        precision: Decimal.Precision
-    ) -> (coefficient: UInt32, exponent: Decimal.Exponent, status: Decimal.Status) {
-        let c = coefficient
-        var e = exponent
-        var status: Decimal.Status = .none
-
-        // Calculate number of digits
-        var digits = 0
-        var temp = c
-        while temp > 0 {
-            digits += 1
-            temp /= 10
-        }
-
-        // If coefficient fits in precision, no rounding needed
-        if digits <= precision.rawValue {
-            return (UInt32(truncatingIfNeeded: c), e, status)
-        }
-
-        // Need to round off (digits - precision) digits
-        let roundDigits = digits - precision.rawValue
-
-        // Calculate divisor
-        var divisor: UInt64 = 1
-        for _ in 0..<roundDigits {
-            divisor *= 10
-        }
-
-        let quotient = c / divisor
-        let remainder = c % divisor
-        let halfDivisor = divisor / 2
-
-        // Determine if we need to round up
-        var roundUp = false
-        switch rounding {
-        case .ceiling:
-            roundUp = remainder > 0 && sign == .positive
-        case .floor:
-            roundUp = remainder > 0 && sign == .negative
-        case .down:
-            roundUp = false
-        case .up:
-            roundUp = remainder > 0
-        case .even:
-            if remainder > halfDivisor {
-                roundUp = true
-            } else if remainder == halfDivisor {
-                roundUp = (quotient % 2) != 0
-            }
-        case .away:
-            roundUp = remainder >= halfDivisor
-        case .toward:
-            roundUp = remainder > halfDivisor
-        }
-
-        var result = quotient
-        if roundUp {
-            result += 1
-        }
-
-        if remainder > 0 {
-            status = .inexact
-        }
-
-        e = e + roundDigits
-
-        // Check if rounding caused overflow of coefficient
-        if result > UInt64(coefficientMax()) {
-            result /= 10
-            e = e + 1
-        }
-
-        return (UInt32(truncatingIfNeeded: result), e, status)
-    }
 }
 
 // MARK: - Test Accessor

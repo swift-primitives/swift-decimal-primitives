@@ -3,8 +3,7 @@ extension Decimal {
     /// - 16 decimal digits of precision
     /// - Exponent range: -383 to +384
     public struct Format64: Sendable, Hashable {
-        @usableFromInline
-        internal var bits: UInt64
+        public var bits: UInt64
 
         public init(bits: UInt64) {
             self.bits = bits
@@ -114,8 +113,8 @@ extension Decimal.Format64 {
         Self(bits: bits ^ 0x8000_0000_0000_0000)
     }
 
-    @usableFromInline
-    internal func extractExponent() -> Decimal.Exponent {
+    @inlinable
+    public func extractExponent() -> Decimal.Exponent {
         // Check for special values (combination field starts with 11)
         let g0g1 = (bits >> 61) & 0x3
         if g0g1 == 0x3 {
@@ -135,8 +134,8 @@ extension Decimal.Format64 {
         return Decimal.Exponent(biasedExponent - Self.bias)
     }
 
-    @usableFromInline
-    internal func extractCoefficient() -> UInt64 {
+    @inlinable
+    public func extractCoefficient() -> UInt64 {
         let g0g1 = (bits >> 61) & 0x3
         if g0g1 == 0x3 {
             // Could be Form 2 or special value
@@ -155,16 +154,16 @@ extension Decimal.Format64 {
         return bits & 0x001F_FFFF_FFFF_FFFF
     }
 
-    @usableFromInline
-    internal static func coefficientMax() -> UInt64 {
+    @inlinable
+    public static func coefficientMax() -> UInt64 {
         // 10^16 - 1 = 9999999999999999
         9_999_999_999_999_999
     }
 
     /// Encode a finite value from sign, exponent, and coefficient
     /// - Precondition: coefficient <= coefficientMax()
-    @usableFromInline
-    internal static func encode(
+    @inlinable
+    public static func encode(
         sign: Decimal.Sign,
         exponent: Decimal.Exponent,
         coefficient: UInt64
@@ -191,8 +190,8 @@ extension Decimal.Format64 {
     }
 
     /// Normalize coefficient and exponent (remove trailing zeros when possible)
-    @usableFromInline
-    internal static func normalize(
+    @inlinable
+    public static func normalize(
         coefficient: UInt64,
         exponent: Decimal.Exponent
     ) -> (coefficient: UInt64, exponent: Decimal.Exponent) {
@@ -212,85 +211,4 @@ extension Decimal.Format64 {
         return (c, e)
     }
 
-    /// Round coefficient to fit in precision digits
-    @usableFromInline
-    internal static func round(
-        coefficient: UInt128,
-        exponent: Decimal.Exponent,
-        sign: Decimal.Sign,
-        rounding: Decimal.Rounding,
-        precision: Decimal.Precision
-    ) -> (coefficient: UInt64, exponent: Decimal.Exponent, status: Decimal.Status) {
-        let c = coefficient
-        var e = exponent
-        var status: Decimal.Status = .none
-
-        // Calculate number of digits
-        var digits = 0
-        var temp = c
-        while temp > 0 {
-            digits += 1
-            temp /= 10
-        }
-
-        // If coefficient fits in precision, no rounding needed
-        if digits <= precision.rawValue {
-            return (UInt64(truncatingIfNeeded: c), e, status)
-        }
-
-        // Need to round off (digits - precision) digits
-        let roundDigits = digits - precision.rawValue
-
-        // Calculate divisor
-        var divisor: UInt128 = 1
-        for _ in 0..<roundDigits {
-            divisor *= 10
-        }
-
-        let quotient = c / divisor
-        let remainder = c % divisor
-        let halfDivisor = divisor / 2
-
-        // Determine if we need to round up
-        var roundUp = false
-        switch rounding {
-        case .ceiling:
-            roundUp = remainder > 0 && sign == .positive
-        case .floor:
-            roundUp = remainder > 0 && sign == .negative
-        case .down:
-            roundUp = false
-        case .up:
-            roundUp = remainder > 0
-        case .even:
-            if remainder > halfDivisor {
-                roundUp = true
-            } else if remainder == halfDivisor {
-                roundUp = (quotient % 2) != 0
-            }
-        case .away:
-            roundUp = remainder >= halfDivisor
-        case .toward:
-            roundUp = remainder > halfDivisor
-        }
-
-        var result = quotient
-        if roundUp {
-            result += 1
-        }
-
-        if remainder > 0 {
-            status = .inexact
-        }
-
-        e = e + roundDigits
-
-        // Check if rounding caused overflow of coefficient
-        if result > UInt128(coefficientMax()) {
-            result /= 10
-            e = e + 1
-        }
-
-        return (UInt64(truncatingIfNeeded: result), e, status)
-    }
 }
