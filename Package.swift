@@ -15,7 +15,7 @@ let package = Package(
         .library(name: "Decimal Primitives", targets: ["Decimal Primitives"])
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-standards/swift-ieee-754.git", from: "0.0.1"),
+        .package(path: "../../swift-standards/swift-ieee-754"),
     ],
     targets: [
         .target(
@@ -26,7 +26,8 @@ let package = Package(
             swiftSettings: [
                 .enableUpcomingFeature("ExistentialAny"),
                 .enableUpcomingFeature("InternalImportsByDefault"),
-                .enableUpcomingFeature("MemberImportVisibility")
+                .enableUpcomingFeature("MemberImportVisibility"),
+                .strictMemorySafety(),
             ]
         ),
         .testTarget(
