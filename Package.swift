@@ -39,3 +39,14 @@ let package = Package(
     ],
     swiftLanguageModes: [.v6]
 )
+
+for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {
+    let settings: [SwiftSetting] = [
+        .enableUpcomingFeature("ExistentialAny"),
+        .enableUpcomingFeature("InternalImportsByDefault"),
+        .enableUpcomingFeature("MemberImportVisibility"),
+        .enableExperimentalFeature("Lifetimes"),
+        .strictMemorySafety(),
+    ]
+    target.swiftSettings = (target.swiftSettings ?? []) + settings
+}
