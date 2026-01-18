@@ -9,31 +9,25 @@ let package = Package(
         .iOS(.v26),
         .tvOS(.v26),
         .watchOS(.v26),
-        .visionOS(.v26),
+        .visionOS(.v26)
     ],
     products: [
         .library(name: "Decimal Primitives", targets: ["Decimal Primitives"])
     ],
     dependencies: [
-        .package(path: "../../swift-standards/swift-ieee-754"),
+        .package(path: "../../swift-standards/swift-ieee-754")
     ],
     targets: [
         .target(
             name: "Decimal Primitives",
             dependencies: [
-                .product(name: "IEEE 754", package: "swift-ieee-754"),
+                .product(name: "IEEE 754", package: "swift-ieee-754")
             ],
             swiftSettings: [
                 .enableUpcomingFeature("ExistentialAny"),
                 .enableUpcomingFeature("InternalImportsByDefault"),
                 .enableUpcomingFeature("MemberImportVisibility"),
-                .strictMemorySafety(),
-            ]
-        ),
-        .testTarget(
-            name: "Decimal Primitives Tests",
-            dependencies: [
-                "Decimal Primitives",
+                .strictMemorySafety()
             ]
         )
     ],
@@ -46,7 +40,7 @@ for target in package.targets where ![.system, .binary, .plugin, .macro].contain
         .enableUpcomingFeature("InternalImportsByDefault"),
         .enableUpcomingFeature("MemberImportVisibility"),
         .enableExperimentalFeature("Lifetimes"),
-        .strictMemorySafety(),
+        .strictMemorySafety()
     ]
     target.swiftSettings = (target.swiftSettings ?? []) + settings
 }
