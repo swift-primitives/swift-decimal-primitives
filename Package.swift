@@ -15,13 +15,11 @@ let package = Package(
         .library(name: "Decimal Primitives", targets: ["Decimal Primitives"])
     ],
     dependencies: [
-        .package(path: "../../swift-standards/swift-ieee-754")
     ],
     targets: [
         .target(
             name: "Decimal Primitives",
             dependencies: [
-                .product(name: "IEEE 754", package: "swift-ieee-754")
             ],
             swiftSettings: [
                 .enableUpcomingFeature("ExistentialAny"),
