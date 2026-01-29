@@ -46,10 +46,10 @@ extension Int64 {
         // Check if coefficient already exceeds Int64 range
         let maxInt64AsUInt128 = UInt128(UInt64(Int64.max))
 
-        if exponent.rawValue < 0 {
+        if Int(exponent) < 0 {
             // Check if there would be a fractional part
             var divisor: UInt128 = 1
-            for _ in 0..<(-exponent.rawValue) {
+            for _ in 0..<(-Int(exponent)) {
                 divisor *= 10
                 if divisor > coefficient {
                     return nil
@@ -70,10 +70,10 @@ extension Int64 {
                 }
                 self = Int64(UInt64(truncatingIfNeeded: integerPart))
             }
-        } else if exponent.rawValue > 0 {
+        } else if Int(exponent) > 0 {
             // Multiply by 10^exponent
             var result = coefficient
-            for _ in 0..<exponent.rawValue {
+            for _ in 0..<Int(exponent) {
                 let newResult = result * 10
                 // Check for overflow beyond Int64 range
                 if newResult > maxInt64AsUInt128 + 1 {
@@ -93,7 +93,7 @@ extension Int64 {
                 self = Int64(UInt64(truncatingIfNeeded: result))
             }
         } else {
-            // exponent.rawValue == 0
+            // Int(exponent) == 0
             if value.test.negative {
                 if coefficient > maxInt64AsUInt128 + 1 {
                     return nil
@@ -131,9 +131,9 @@ extension UInt64 {
         let exponent = value.extractExponent()
         let maxUInt64AsUInt128 = UInt128(UInt64.max)
 
-        if exponent.rawValue < 0 {
+        if Int(exponent) < 0 {
             var divisor: UInt128 = 1
-            for _ in 0..<(-exponent.rawValue) {
+            for _ in 0..<(-Int(exponent)) {
                 divisor *= 10
                 if divisor > coefficient {
                     return nil
@@ -147,9 +147,9 @@ extension UInt64 {
                 return nil
             }
             self = UInt64(truncatingIfNeeded: result)
-        } else if exponent.rawValue > 0 {
+        } else if Int(exponent) > 0 {
             var result = coefficient
-            for _ in 0..<exponent.rawValue {
+            for _ in 0..<Int(exponent) {
                 result *= 10
                 if result > maxUInt64AsUInt128 {
                     return nil

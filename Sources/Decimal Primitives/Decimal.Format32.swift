@@ -135,7 +135,7 @@ extension Decimal.Format32 {
         coefficient: UInt32
     ) -> Self {
         let signBit: UInt32 = sign == .negative ? 0x8000_0000 : 0
-        let biasedExponent = UInt32(exponent.rawValue + bias)
+        let biasedExponent = UInt32(Int(exponent) + bias)
 
         if coefficient < (1 << 23) {
             // Form 1: coefficient fits in 23 bits

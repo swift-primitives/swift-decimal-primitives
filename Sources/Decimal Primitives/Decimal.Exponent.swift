@@ -62,6 +62,16 @@ extension Decimal.Exponent {
     }
 }
 
+// MARK: - Integer Conversion
+
+extension Int {
+    /// Initialize from Decimal.Exponent
+    @inlinable
+    public init(_ exponent: Decimal.Exponent) {
+        self = exponent.rawValue
+    }
+}
+
 // MARK: - Format Limits
 
 extension Decimal.Exponent {

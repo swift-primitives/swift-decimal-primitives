@@ -49,10 +49,10 @@ extension Int32 {
         let coefficient = value.extractCoefficient()
         let exponent = value.extractExponent()
 
-        if exponent.rawValue < 0 {
+        if Int(exponent) < 0 {
             // Check if there would be a fractional part
             var divisor: UInt32 = 1
-            for _ in 0..<(-exponent.rawValue) {
+            for _ in 0..<(-Int(exponent)) {
                 let (newDivisor, overflow) = divisor.multipliedReportingOverflow(by: 10)
                 if overflow || newDivisor > coefficient {
                     return nil
@@ -74,10 +74,10 @@ extension Int32 {
                 }
                 self = Int32(integerPart)
             }
-        } else if exponent.rawValue > 0 {
+        } else if Int(exponent) > 0 {
             // Multiply by 10^exponent
             var result = coefficient
-            for _ in 0..<exponent.rawValue {
+            for _ in 0..<Int(exponent) {
                 let (newResult, overflow) = result.multipliedReportingOverflow(by: 10)
                 if overflow {
                     return nil
@@ -96,7 +96,7 @@ extension Int32 {
                 self = Int32(result)
             }
         } else {
-            // exponent.rawValue == 0
+            // Int(exponent) == 0
             if value.test.negative {
                 if coefficient > UInt32(Int32.max) + 1 {
                     return nil
@@ -133,9 +133,9 @@ extension UInt32 {
         let coefficient = value.extractCoefficient()
         let exponent = value.extractExponent()
 
-        if exponent.rawValue < 0 {
+        if Int(exponent) < 0 {
             var divisor: UInt32 = 1
-            for _ in 0..<(-exponent.rawValue) {
+            for _ in 0..<(-Int(exponent)) {
                 let (newDivisor, overflow) = divisor.multipliedReportingOverflow(by: 10)
                 if overflow || newDivisor > coefficient {
                     return nil
@@ -146,9 +146,9 @@ extension UInt32 {
                 return nil
             }
             self = coefficient / divisor
-        } else if exponent.rawValue > 0 {
+        } else if Int(exponent) > 0 {
             var result = coefficient
-            for _ in 0..<exponent.rawValue {
+            for _ in 0..<Int(exponent) {
                 let (newResult, overflow) = result.multipliedReportingOverflow(by: 10)
                 if overflow {
                     return nil

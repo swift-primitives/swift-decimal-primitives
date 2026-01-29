@@ -51,10 +51,10 @@ extension Int64 {
 
         // If exponent is positive, we need to multiply
         // If exponent is negative, we need to check for fractional part
-        if exponent.rawValue < 0 {
+        if Int(exponent) < 0 {
             // Check if there would be a fractional part
             var divisor: UInt64 = 1
-            for _ in 0..<(-exponent.rawValue) {
+            for _ in 0..<(-Int(exponent)) {
                 divisor *= 10
                 if divisor > coefficient {
                     // Would have fractional part
@@ -76,10 +76,10 @@ extension Int64 {
                 }
                 self = Int64(integerPart)
             }
-        } else if exponent.rawValue > 0 {
+        } else if Int(exponent) > 0 {
             // Multiply by 10^exponent
             var result = coefficient
-            for _ in 0..<exponent.rawValue {
+            for _ in 0..<Int(exponent) {
                 let (newResult, overflow) = result.multipliedReportingOverflow(by: 10)
                 if overflow {
                     return nil
@@ -98,7 +98,7 @@ extension Int64 {
                 self = Int64(result)
             }
         } else {
-            // exponent.rawValue == 0
+            // Int(exponent) == 0
             if value.test.negative {
                 if coefficient > UInt64(Int64.max) + 1 {
                     return nil
@@ -135,10 +135,10 @@ extension UInt64 {
         let coefficient = value.extractCoefficient()
         let exponent = value.extractExponent()
 
-        if exponent.rawValue < 0 {
+        if Int(exponent) < 0 {
             // Check if there would be a fractional part
             var divisor: UInt64 = 1
-            for _ in 0..<(-exponent.rawValue) {
+            for _ in 0..<(-Int(exponent)) {
                 divisor *= 10
                 if divisor > coefficient {
                     return nil
@@ -148,10 +148,10 @@ extension UInt64 {
                 return nil
             }
             self = coefficient / divisor
-        } else if exponent.rawValue > 0 {
+        } else if Int(exponent) > 0 {
             // Multiply by 10^exponent
             var result = coefficient
-            for _ in 0..<exponent.rawValue {
+            for _ in 0..<Int(exponent) {
                 let (newResult, overflow) = result.multipliedReportingOverflow(by: 10)
                 if overflow {
                     return nil

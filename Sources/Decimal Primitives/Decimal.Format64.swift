@@ -169,7 +169,7 @@ extension Decimal.Format64 {
         coefficient: UInt64
     ) -> Self {
         let signBit: UInt64 = sign == .negative ? 0x8000_0000_0000_0000 : 0
-        let biasedExponent = UInt64(exponent.rawValue + bias)
+        let biasedExponent = UInt64(Int(exponent) + bias)
 
         if coefficient < (1 << 53) {
             // Form 1: coefficient fits in 53 bits

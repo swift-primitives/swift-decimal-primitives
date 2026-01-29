@@ -136,7 +136,7 @@ extension Decimal.Format128 {
         coefficient: UInt128
     ) -> Self {
         let signBit: UInt64 = sign == .negative ? 0x8000_0000_0000_0000 : 0
-        let biasedExponent = UInt64(exponent.rawValue + bias)
+        let biasedExponent = UInt64(Int(exponent) + bias)
 
         let coeffHigh = UInt64(coefficient >> 64)
         let coeffLow = UInt64(truncatingIfNeeded: coefficient)

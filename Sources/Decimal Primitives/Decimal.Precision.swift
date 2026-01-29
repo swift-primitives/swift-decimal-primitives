@@ -57,6 +57,16 @@ extension Decimal.Precision {
     }
 }
 
+// MARK: - Integer Conversion
+
+extension Int {
+    /// Initialize from Decimal.Precision
+    @inlinable
+    public init(_ precision: Decimal.Precision) {
+        self = precision.rawValue
+    }
+}
+
 // MARK: - Format Constants
 
 extension Decimal.Precision {
