@@ -17,17 +17,13 @@ extension Decimal {
 // MARK: - Layout Conformance
 
 extension Decimal.Format128: Decimal.Layout {
-    @usableFromInline
-    internal static var precision: Decimal.Precision { .format128 }
+    public static var precision: Decimal.Precision { .format128 }
 
-    @usableFromInline
-    internal static var maxExponent: Decimal.Exponent { .Format128.max }
+    public static var maxExponent: Decimal.Exponent { .Format128.max }
 
-    @usableFromInline
-    internal static var minExponent: Decimal.Exponent { .Format128.min }
+    public static var minExponent: Decimal.Exponent { .Format128.min }
 
-    @usableFromInline
-    internal static var bias: Int { Decimal.Exponent.Format128.bias }
+    public static var bias: Int { Decimal.Exponent.Format128.bias }
 }
 
 // MARK: - Canonical Factories
@@ -157,45 +153,3 @@ extension Decimal.Format128 {
 
 }
 
-// MARK: - Test Accessor
-
-extension Decimal.Format128 {
-    public var test: Decimal.Test<Self> {
-        Decimal.Test(self)
-    }
-}
-
-extension Decimal.Test where Value == Decimal.Format128 {
-    public var nan: Bool {
-        let c = base.classification
-        return c == .quiet || c == .signaling
-    }
-
-    public var signaling: Bool {
-        base.classification == .signaling
-    }
-
-    public var infinite: Bool {
-        base.classification == .infinite
-    }
-
-    public var finite: Bool {
-        !nan && !infinite
-    }
-
-    public var zero: Bool {
-        base.classification == .zero
-    }
-
-    public var negative: Bool {
-        base.sign == .negative
-    }
-
-    public var normal: Bool {
-        base.classification == .normal
-    }
-
-    public var subnormal: Bool {
-        base.classification == .subnormal
-    }
-}

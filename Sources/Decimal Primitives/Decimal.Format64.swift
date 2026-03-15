@@ -14,17 +14,13 @@ extension Decimal {
 // MARK: - Layout Conformance
 
 extension Decimal.Format64: Decimal.Layout {
-    @usableFromInline
-    internal static var precision: Decimal.Precision { .format64 }
+    public static var precision: Decimal.Precision { .format64 }
 
-    @usableFromInline
-    internal static var maxExponent: Decimal.Exponent { .Format64.max }
+    public static var maxExponent: Decimal.Exponent { .Format64.max }
 
-    @usableFromInline
-    internal static var minExponent: Decimal.Exponent { .Format64.min }
+    public static var minExponent: Decimal.Exponent { .Format64.min }
 
-    @usableFromInline
-    internal static var bias: Int { Decimal.Exponent.Format64.bias }
+    public static var bias: Int { Decimal.Exponent.Format64.bias }
 }
 
 // MARK: - Canonical Factories

@@ -1,33 +1,49 @@
 // MARK: - Decimal.Format32 ← Integer
 
 extension Decimal.Format32 {
-    /// Initialize from Int32 (always exact within precision)
-    public init(_ value: Int32) {
+    /// Initialize from Int32, if exactly representable.
+    ///
+    /// Returns `nil` when the value has more significant digits than
+    /// this format's precision (7 decimal digits).
+    public init?(_ value: Int32) {
         if value == 0 {
             self = .zero()
             return
         }
 
         let sign: Decimal.Sign = value < 0 ? .negative : .positive
-        let magnitude = value < 0 ? UInt32(bitPattern: -value) : UInt32(value)
+        var coefficient = value.magnitude
+        var exponent = 0
 
-        self = Self.encode(sign: sign, exponent: 0, coefficient: magnitude)
+        while coefficient > Self.coefficientMax() {
+            guard coefficient % 10 == 0 else { return nil }
+            coefficient /= 10
+            exponent += 1
+        }
+
+        self = Self.encode(sign: sign, exponent: Decimal.Exponent(exponent), coefficient: coefficient)
     }
 
-    /// Initialize from UInt32 (always exact within precision)
-    public init(_ value: UInt32) {
+    /// Initialize from UInt32, if exactly representable.
+    ///
+    /// Returns `nil` when the value has more significant digits than
+    /// this format's precision (7 decimal digits).
+    public init?(_ value: UInt32) {
         if value == 0 {
             self = .zero()
             return
         }
 
-        // Check if value fits in 7 decimal digits
-        if value > 9_999_999 {
-            // Value too large - would need to adjust exponent
-            fatalError("Value too large for exact representation")
+        var coefficient = value
+        var exponent = 0
+
+        while coefficient > Self.coefficientMax() {
+            guard coefficient % 10 == 0 else { return nil }
+            coefficient /= 10
+            exponent += 1
         }
 
-        self = Self.encode(sign: .positive, exponent: 0, coefficient: value)
+        self = Self.encode(sign: .positive, exponent: Decimal.Exponent(exponent), coefficient: coefficient)
     }
 }
 
