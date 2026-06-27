@@ -1,11 +1,13 @@
 extension Decimal {
-    /// 64-bit decimal floating-point (IEEE 754-2008, BID encoding)
-    /// - 16 decimal digits of precision
-    /// - Exponent range: -383 to +384
+    /// A 64-bit decimal floating-point value (IEEE 754-2008, BID encoding).
+    ///
+    /// - 16 decimal digits of precision.
+    /// - Exponent range: -383 to +384.
     public struct Format64: Sendable, Hashable {
-        @usableFromInline
-        internal var bits: UInt64
+        /// The raw 64-bit BID encoding.
+        public var bits: UInt64
 
+        /// Creates a value from its raw 64-bit BID encoding.
         public init(bits: UInt64) {
             self.bits = bits
         }
@@ -15,17 +17,17 @@ extension Decimal {
 // MARK: - Layout Conformance
 
 extension Decimal.Format64: Decimal.Layout {
-    @usableFromInline
-    internal static var precision: Decimal.Precision { .format64 }
+    /// The number of significant decimal digits, which is 16.
+    public static var precision: Decimal.Precision { .format64 }
 
-    @usableFromInline
-    internal static var maxExponent: Decimal.Exponent { .Format64.max }
+    /// The maximum encodable exponent.
+    public static var maxExponent: Decimal.Exponent { .Format64.max }
 
-    @usableFromInline
-    internal static var minExponent: Decimal.Exponent { .Format64.min }
+    /// The minimum encodable exponent.
+    public static var minExponent: Decimal.Exponent { .Format64.min }
 
-    @usableFromInline
-    internal static var bias: Int { Decimal.Exponent.Format64.bias }
+    /// The bias added to the exponent when encoding.
+    public static var bias: Int { Decimal.Exponent.Format64.bias }
 }
 
 // MARK: - Canonical Factories
@@ -58,14 +60,17 @@ extension Decimal.Format64 {
         return Self(bits: base | (payload.value & payloadMask))
     }
 
+    /// Returns the signed zero of this format.
     public static func zero(sign: Decimal.Sign = .positive) -> Self {
         canonical(zero: sign)
     }
 
+    /// Returns the signed infinity of this format.
     public static func infinity(sign: Decimal.Sign = .positive) -> Self {
         canonical(infinity: sign)
     }
 
+    /// Returns a NaN of this format with the given kind and diagnostic payload.
     public static func nan(kind: Decimal.NaN = .quiet, payload: Decimal.Payload = .none) -> Self {
         canonical(nan: kind, payload: payload)
     }
@@ -74,6 +79,7 @@ extension Decimal.Format64 {
 // MARK: - Classification and Properties
 
 extension Decimal.Format64 {
+    /// The IEEE 754 class of this value.
     public var classification: Decimal.Class {
         // Extract combination field (bits 62-58)
         let combination = (bits >> 58) & 0x1F
@@ -106,16 +112,19 @@ extension Decimal.Format64 {
         return .normal
     }
 
+    /// The sign of this value.
     public var sign: Decimal.Sign {
         (bits & 0x8000_0000_0000_0000) != 0 ? .negative : .positive
     }
 
+    /// This value with its sign bit flipped.
     public var negated: Self {
         Self(bits: bits ^ 0x8000_0000_0000_0000)
     }
 
-    @usableFromInline
-    internal func extractExponent() -> Decimal.Exponent {
+    /// Returns the unbiased decimal exponent of this value.
+    @inlinable
+    public func extractExponent() -> Decimal.Exponent {
         // Check for special values (combination field starts with 11)
         let g0g1 = (bits >> 61) & 0x3
         if g0g1 == 0x3 {
@@ -135,8 +144,9 @@ extension Decimal.Format64 {
         return Decimal.Exponent(biasedExponent - Self.bias)
     }
 
-    @usableFromInline
-    internal func extractCoefficient() -> UInt64 {
+    /// Returns the integer coefficient (significand) of this value.
+    @inlinable
+    public func extractCoefficient() -> UInt64 {
         let g0g1 = (bits >> 61) & 0x3
         if g0g1 == 0x3 {
             // Could be Form 2 or special value
@@ -155,30 +165,26 @@ extension Decimal.Format64 {
         return bits & 0x001F_FFFF_FFFF_FFFF
     }
 
-    @usableFromInline
-    internal static func coefficientMax() -> UInt64 {
+    /// Returns the largest coefficient this format can hold (10^16 - 1).
+    @inlinable
+    public static func coefficientMax() -> UInt64 {
         // 10^16 - 1 = 9999999999999999
         9_999_999_999_999_999
     }
 
-    /// Encode a finite value from sign, exponent, and coefficient
-    /// - Precondition: coefficient <= coefficientMax()
-    @usableFromInline
-    internal static func encode(
+    /// Encodes a finite value from its sign, exponent, and coefficient.
+    ///
+    /// - Precondition: `coefficient <= coefficientMax()`.
+    @inlinable
+    public static func encode(
         sign: Decimal.Sign,
         exponent: Decimal.Exponent,
         coefficient: UInt64
     ) -> Self {
         let signBit: UInt64 = sign == .negative ? 0x8000_0000_0000_0000 : 0
-        let biasedExponent = UInt64(exponent.rawValue + bias)
+        let biasedExponent = UInt64(Int(exponent) + bias)
 
-        if coefficient < (1 << 53) {
-            // Form 1: coefficient fits in 53 bits
-            // bits 63: sign
-            // bits 62-53: 10-bit biased exponent
-            // bits 52-0: 53-bit coefficient
-            return Self(bits: signBit | (biasedExponent << 53) | coefficient)
-        } else {
+        guard coefficient < (1 << 53) else {
             // Form 2: coefficient needs implied prefix
             // bits 63: sign
             // bits 62-61: 11 (Form 2 marker)
@@ -188,11 +194,16 @@ extension Decimal.Format64 {
             let lowCoeff = coefficient & 0x0007_FFFF_FFFF_FFFF  // 51 bits
             return Self(bits: signBit | form2Marker | (biasedExponent << 51) | lowCoeff)
         }
+        // Form 1: coefficient fits in 53 bits
+        // bits 63: sign
+        // bits 62-53: 10-bit biased exponent
+        // bits 52-0: 53-bit coefficient
+        return Self(bits: signBit | (biasedExponent << 53) | coefficient)
     }
 
-    /// Normalize coefficient and exponent (remove trailing zeros when possible)
-    @usableFromInline
-    internal static func normalize(
+    /// Normalizes a coefficient and exponent by removing trailing zeros where the exponent allows.
+    @inlinable
+    public static func normalize(
         coefficient: UInt64,
         exponent: Decimal.Exponent
     ) -> (coefficient: UInt64, exponent: Decimal.Exponent) {
@@ -206,91 +217,10 @@ extension Decimal.Format64 {
         // Remove trailing zeros while we can increase exponent
         while c % 10 == 0, e < maxExponent {
             c /= 10
-            e = e + 1
+            e += 1
         }
 
         return (c, e)
     }
 
-    /// Round coefficient to fit in precision digits
-    @usableFromInline
-    internal static func round(
-        coefficient: UInt128,
-        exponent: Decimal.Exponent,
-        sign: Decimal.Sign,
-        rounding: Decimal.Rounding,
-        precision: Decimal.Precision
-    ) -> (coefficient: UInt64, exponent: Decimal.Exponent, status: Decimal.Status) {
-        let c = coefficient
-        var e = exponent
-        var status: Decimal.Status = .none
-
-        // Calculate number of digits
-        var digits = 0
-        var temp = c
-        while temp > 0 {
-            digits += 1
-            temp /= 10
-        }
-
-        // If coefficient fits in precision, no rounding needed
-        if digits <= precision.rawValue {
-            return (UInt64(truncatingIfNeeded: c), e, status)
-        }
-
-        // Need to round off (digits - precision) digits
-        let roundDigits = digits - precision.rawValue
-
-        // Calculate divisor
-        var divisor: UInt128 = 1
-        for _ in 0..<roundDigits {
-            divisor *= 10
-        }
-
-        let quotient = c / divisor
-        let remainder = c % divisor
-        let halfDivisor = divisor / 2
-
-        // Determine if we need to round up
-        var roundUp = false
-        switch rounding {
-        case .ceiling:
-            roundUp = remainder > 0 && sign == .positive
-        case .floor:
-            roundUp = remainder > 0 && sign == .negative
-        case .down:
-            roundUp = false
-        case .up:
-            roundUp = remainder > 0
-        case .even:
-            if remainder > halfDivisor {
-                roundUp = true
-            } else if remainder == halfDivisor {
-                roundUp = (quotient % 2) != 0
-            }
-        case .away:
-            roundUp = remainder >= halfDivisor
-        case .toward:
-            roundUp = remainder > halfDivisor
-        }
-
-        var result = quotient
-        if roundUp {
-            result += 1
-        }
-
-        if remainder > 0 {
-            status = .inexact
-        }
-
-        e = e + roundDigits
-
-        // Check if rounding caused overflow of coefficient
-        if result > UInt128(coefficientMax()) {
-            result /= 10
-            e = e + 1
-        }
-
-        return (UInt64(truncatingIfNeeded: result), e, status)
-    }
 }

@@ -1,4 +1,5 @@
 extension Decimal {
+    /// A namespace of Boolean classification queries on a decimal value.
     public struct Test<Value> {
         @usableFromInline
         let base: Value
@@ -10,52 +11,53 @@ extension Decimal {
     }
 }
 
-extension Decimal.Test: Sendable where Value: Sendable { }
+extension Decimal.Test: Sendable where Value: Sendable {}
 
-extension Decimal.Format64 {
+extension Decimal.Layout {
+    /// Boolean classification queries for this value.
     public var test: Decimal.Test<Self> {
         Decimal.Test(self)
     }
 }
 
-extension Decimal.Test where Value == Decimal.Format64 {
-    /// True if quiet or signaling NaN
+extension Decimal.Test where Value: Decimal.Layout {
+    /// A Boolean value indicating whether the value is a NaN, whether quiet or signaling.
     public var nan: Bool {
         let c = base.classification
         return c == .quiet || c == .signaling
     }
 
-    /// True if signaling NaN
+    /// A Boolean value indicating whether the value is a signaling NaN.
     public var signaling: Bool {
         base.classification == .signaling
     }
 
-    /// True if infinite
+    /// A Boolean value indicating whether the value is an infinity.
     public var infinite: Bool {
         base.classification == .infinite
     }
 
-    /// True if finite (not NaN, not infinite)
+    /// A Boolean value indicating whether the value is finite, that is neither NaN nor infinite.
     public var finite: Bool {
         !nan && !infinite
     }
 
-    /// True if zero
+    /// A Boolean value indicating whether the value is a zero.
     public var zero: Bool {
         base.classification == .zero
     }
 
-    /// True if negative
+    /// A Boolean value indicating whether the value is negative.
     public var negative: Bool {
         base.sign == .negative
     }
 
-    /// True if normal
+    /// A Boolean value indicating whether the value is a normal finite value.
     public var normal: Bool {
         base.classification == .normal
     }
 
-    /// True if subnormal
+    /// A Boolean value indicating whether the value is a subnormal finite value.
     public var subnormal: Bool {
         base.classification == .subnormal
     }

@@ -10,5 +10,6 @@
 //
 // ===----------------------------------------------------------------------===//
 
-// Decimal Primitives has zero external dependencies.
-// All types are defined within this module.
+// No re-exports - this is a Tier 0 atomic package with zero dependencies.
+// IEEE 754 standard implementation (swift-ieee-754) depends on this package
+// and re-exports it.

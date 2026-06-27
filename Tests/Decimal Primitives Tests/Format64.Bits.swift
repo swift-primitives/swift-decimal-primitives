@@ -1,4 +1,5 @@
 import Testing
+
 @testable import Decimal_Primitives
 
 @Suite struct Format64BitsTests {

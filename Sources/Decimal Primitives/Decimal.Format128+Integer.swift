@@ -1,6 +1,6 @@
-// MARK: - Decimal.Format64 ← Integer
+// MARK: - Decimal.Format128 ← Integer
 
-extension Decimal.Format64 {
+extension Decimal.Format128 {
     /// Initialize from a signed 64-bit integer, exact within the format's precision.
     public init(_ value: Int64) {
         if value == 0 {
@@ -11,7 +11,7 @@ extension Decimal.Format64 {
         let sign: Decimal.Sign = value < 0 ? .negative : .positive
         let magnitude = value < 0 ? UInt64(bitPattern: -value) : UInt64(value)
 
-        self = Self.encode(sign: sign, exponent: 0, coefficient: magnitude)
+        self = Self.encode(sign: sign, exponent: 0, coefficient: UInt128(magnitude))
     }
 
     /// Initialize from an unsigned 64-bit integer, exact within the format's precision.
@@ -21,21 +21,15 @@ extension Decimal.Format64 {
             return
         }
 
-        // Check if value fits in 16 decimal digits
-        if value > 9_999_999_999_999_999 {
-            // Value too large - would need to adjust exponent
-            fatalError("Value too large for exact representation")
-        }
-
-        self = Self.encode(sign: .positive, exponent: 0, coefficient: value)
+        self = Self.encode(sign: .positive, exponent: 0, coefficient: UInt128(value))
     }
 }
 
-// MARK: - Integer ← Decimal.Format64
+// MARK: - Integer ← Decimal.Format128
 
 extension Int64 {
-    /// Initialize from a 64-bit decimal value, if exactly representable.
-    public init?(exactly value: Decimal.Format64) {
+    /// Initialize from a 128-bit decimal value, if exactly representable.
+    public init?(exactly value: Decimal.Format128) {
         // Check for special values
         if value.test.nan || value.test.infinite {
             return nil
@@ -49,15 +43,15 @@ extension Int64 {
         let coefficient = value.extractCoefficient()
         let exponent = value.extractExponent()
 
-        // If exponent is positive, we need to multiply
-        // If exponent is negative, we need to check for fractional part
+        // Check if coefficient already exceeds Int64 range
+        let maxInt64AsUInt128 = UInt128(UInt64(Self.max))
+
         if Int(exponent) < 0 {
             // Check if there would be a fractional part
-            var divisor: UInt64 = 1
+            var divisor: UInt128 = 1
             for _ in 0..<(-Int(exponent)) {
                 divisor *= 10
                 if divisor > coefficient {
-                    // Would have fractional part
                     return nil
                 }
             }
@@ -66,57 +60,58 @@ extension Int64 {
             }
             let integerPart = coefficient / divisor
             if value.test.negative {
-                if integerPart > UInt64(Self.max) + 1 {
+                if integerPart > maxInt64AsUInt128 + 1 {
                     return nil
                 }
-                self = -Int64(integerPart)
+                self = -Int64(UInt64(truncatingIfNeeded: integerPart))
             } else {
-                if integerPart > UInt64(Self.max) {
+                if integerPart > maxInt64AsUInt128 {
                     return nil
                 }
-                self = Int64(integerPart)
+                self = Int64(UInt64(truncatingIfNeeded: integerPart))
             }
         } else if Int(exponent) > 0 {
             // Multiply by 10^exponent
             var result = coefficient
             for _ in 0..<Int(exponent) {
-                let (newResult, overflow) = result.multipliedReportingOverflow(by: 10)
-                if overflow {
+                let newResult = result * 10
+                // Check for overflow beyond Int64 range
+                if newResult > maxInt64AsUInt128 + 1 {
                     return nil
                 }
                 result = newResult
             }
             if value.test.negative {
-                if result > UInt64(Self.max) + 1 {
+                if result > maxInt64AsUInt128 + 1 {
                     return nil
                 }
-                self = -Int64(result)
+                self = -Int64(UInt64(truncatingIfNeeded: result))
             } else {
-                if result > UInt64(Self.max) {
+                if result > maxInt64AsUInt128 {
                     return nil
                 }
-                self = Int64(result)
+                self = Int64(UInt64(truncatingIfNeeded: result))
             }
         } else {
             // Int(exponent) == 0
             if value.test.negative {
-                if coefficient > UInt64(Self.max) + 1 {
+                if coefficient > maxInt64AsUInt128 + 1 {
                     return nil
                 }
-                self = -Int64(coefficient)
+                self = -Int64(UInt64(truncatingIfNeeded: coefficient))
             } else {
-                if coefficient > UInt64(Self.max) {
+                if coefficient > maxInt64AsUInt128 {
                     return nil
                 }
-                self = Int64(coefficient)
+                self = Int64(UInt64(truncatingIfNeeded: coefficient))
             }
         }
     }
 }
 
 extension UInt64 {
-    /// Initialize from a 64-bit decimal value, if exactly representable.
-    public init?(exactly value: Decimal.Format64) {
+    /// Initialize from a 128-bit decimal value, if exactly representable.
+    public init?(exactly value: Decimal.Format128) {
         // Check for special values
         if value.test.nan || value.test.infinite {
             return nil
@@ -134,10 +129,10 @@ extension UInt64 {
 
         let coefficient = value.extractCoefficient()
         let exponent = value.extractExponent()
+        let maxUInt64AsUInt128 = UInt128(Self.max)
 
         if Int(exponent) < 0 {
-            // Check if there would be a fractional part
-            var divisor: UInt64 = 1
+            var divisor: UInt128 = 1
             for _ in 0..<(-Int(exponent)) {
                 divisor *= 10
                 if divisor > coefficient {
@@ -147,20 +142,25 @@ extension UInt64 {
             if coefficient % divisor != 0 {
                 return nil
             }
-            self = coefficient / divisor
+            let result = coefficient / divisor
+            if result > maxUInt64AsUInt128 {
+                return nil
+            }
+            self = UInt64(truncatingIfNeeded: result)
         } else if Int(exponent) > 0 {
-            // Multiply by 10^exponent
             var result = coefficient
             for _ in 0..<Int(exponent) {
-                let (newResult, overflow) = result.multipliedReportingOverflow(by: 10)
-                if overflow {
+                result *= 10
+                if result > maxUInt64AsUInt128 {
                     return nil
                 }
-                result = newResult
             }
-            self = result
+            self = UInt64(truncatingIfNeeded: result)
         } else {
-            self = coefficient
+            if coefficient > maxUInt64AsUInt128 {
+                return nil
+            }
+            self = UInt64(truncatingIfNeeded: coefficient)
         }
     }
 }
