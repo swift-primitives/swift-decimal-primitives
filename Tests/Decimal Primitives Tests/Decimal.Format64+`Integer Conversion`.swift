@@ -11,10 +11,12 @@ extension Decimal.Format64 {
 }
 
 extension Decimal.Format64.`Integer Conversion`.`Edge Case` {
-    /// F-004: `Int64.min`'s magnitude (2^63) has 19 significant digits and no
-    /// factor of five, so no power-of-ten normalization can bring it into this
-    /// format's 16-digit precision. The correct outcome is `nil` — the
-    /// unfixed initializer instead traps while computing `-Int64.min`.
+    /// F-004: the magnitude of `Int64.min` (2^63) has 19 significant digits
+    /// and no factor of five, so no power-of-ten normalization can bring it
+    /// into this format's 16-digit precision.
+    ///
+    /// The correct outcome is `nil` — the unfixed initializer instead traps
+    /// while computing `-Int64.min`.
     @Test func initializesFromInt64MinByReturningNilRatherThanTrapping() {
         #expect(Decimal.Format64(Int64.min) == nil)
     }
@@ -28,8 +30,10 @@ extension Decimal.Format64.`Integer Conversion`.`Edge Case` {
 
     /// F-004: `Int64.max` has 19 significant digits, exceeding this format's
     /// 16-digit precision, and is not a multiple of a large enough power of
-    /// ten to fit. The unfixed initializer had no magnitude check at all and
-    /// silently truncated it into a wrong value instead of returning `nil`.
+    /// ten to fit.
+    ///
+    /// The unfixed initializer had no magnitude check at all and silently
+    /// truncated it into a wrong value instead of returning `nil`.
     @Test func initializesFromLargeInt64ByReturningNilRatherThanCorrupting() {
         #expect(Decimal.Format64(Int64.max) == nil)
     }

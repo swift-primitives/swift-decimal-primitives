@@ -12,8 +12,10 @@ extension Decimal.Format32 {
 
 extension Decimal.Format32.`BID Round Trip`.`Edge Case` {
     /// F-001: a Form-2 finite value whose combination field is `11100`
-    /// (G0=G1=1, G2=1, G3=0) must decode as finite. A decoder that treats
-    /// G2 alone as the special-value marker misreads it as infinity/NaN.
+    /// (G0=G1=1, G2=1, G3=0) must decode as finite.
+    ///
+    /// A decoder that treats G2 alone as the special-value marker misreads
+    /// it as infinity/NaN.
     @Test func formTwoFiniteValueIsNotMisreadAsSpecial() {
         // biased exponent 150 = 0b1001_0110 -> top two bits (G2, G3) = (1, 0)
         let exponent = Decimal.Exponent(49)

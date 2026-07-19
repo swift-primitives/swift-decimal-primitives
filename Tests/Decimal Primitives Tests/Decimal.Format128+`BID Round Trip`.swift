@@ -12,8 +12,10 @@ extension Decimal.Format128 {
 
 extension Decimal.Format128.`BID Round Trip`.`Edge Case` {
     /// F-001: a Form-2 finite value whose combination field is `11100`
-    /// (G0=G1=1, G2=1, G3=0) must decode as finite. A decoder that treats
-    /// G2 alone as the special-value marker misreads it as infinity/NaN.
+    /// (G0=G1=1, G2=1, G3=0) must decode as finite.
+    ///
+    /// A decoder that treats G2 alone as the special-value marker misreads
+    /// it as infinity/NaN.
     ///
     /// This package's own `encode` never sets G2 (it only ever writes
     /// `110...`), so the bit pattern is built directly — matching a
