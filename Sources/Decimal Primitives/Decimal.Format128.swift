@@ -73,12 +73,14 @@ extension Decimal.Format128 {
             }
         }
 
-        // Check if coefficient is zero
-        if (high & 0x0001_FFFF_FFFF_FFFF) == 0 && low == 0 {
-            return .zero
-        }
-
-        return .normal
+        // For finite numbers, classify by magnitude (zero / subnormal / normal).
+        // `extractCoefficient()` already handles both Form 1 and Form 2, unlike a
+        // hand-rolled Form-1-only bit mask.
+        return Decimal.Class.classifyFinite(
+            coefficient: extractCoefficient(),
+            exponent: extractExponent(),
+            scientificMin: Decimal.Exponent.Format128.scientificMin
+        )
     }
 
     /// The sign of this value.

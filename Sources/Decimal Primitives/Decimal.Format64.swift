@@ -97,19 +97,12 @@ extension Decimal.Format64 {
             }
         }
 
-        // For finite numbers, check if coefficient is zero
-        let coefficient = extractCoefficient()
-        if coefficient == 0 {
-            return .zero
-        }
-
-        // Check for subnormal (exponent at minimum)
-        let exponent = extractExponent()
-        if exponent == Self.minExponent, coefficient < Self.coefficientMax() / 10 {
-            return .subnormal
-        }
-
-        return .normal
+        // For finite numbers, classify by magnitude (zero / subnormal / normal).
+        return Decimal.Class.classifyFinite(
+            coefficient: extractCoefficient(),
+            exponent: extractExponent(),
+            scientificMin: Decimal.Exponent.Format64.scientificMin
+        )
     }
 
     /// The sign of this value.
