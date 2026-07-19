@@ -98,38 +98,68 @@ extension Int {
 
 extension Decimal.Exponent {
     /// The exponent range and bias of the 32-bit decimal format.
+    ///
+    /// `max`/`min` are the **quantum** exponent limits — the range of the
+    /// exponent actually stored in and extracted from the encoding (`value
+    /// = coefficient × 10^exponent`), and the values that gate `encode`,
+    /// `extractExponent`, and `normalize`. `scientificMax`/`scientificMin`
+    /// are the IEEE 754-2008 Emax/Emin — the exponent of the *normalized*
+    /// (one-digit-before-the-point) form, used only for subnormal/overflow
+    /// classification. `quantum = scientific - (precision - 1)`.
     public enum Format32 {
-        /// The maximum encodable exponent of the 32-bit format.
-        public static let max: Decimal.Exponent = 96
+        /// The maximum encodable (quantum) exponent of the 32-bit format.
+        public static let max: Decimal.Exponent = 90
 
-        /// The minimum encodable exponent of the 32-bit format.
-        public static let min: Decimal.Exponent = -95
+        /// The minimum encodable (quantum) exponent of the 32-bit format.
+        public static let min: Decimal.Exponent = -101
 
         /// The bias added to the exponent when encoding the 32-bit format.
         public static let bias: Int = 101
+
+        /// The maximum exponent of the scientific (normalized) range, Emax.
+        public static let scientificMax: Decimal.Exponent = 96
+
+        /// The minimum exponent of the scientific (normalized) range, Emin.
+        public static let scientificMin: Decimal.Exponent = -95
     }
 
     /// The exponent range and bias of the 64-bit decimal format.
+    ///
+    /// See ``Format32`` for the quantum-vs-scientific distinction.
     public enum Format64 {
-        /// The maximum encodable exponent of the 64-bit format.
-        public static let max: Decimal.Exponent = 384
+        /// The maximum encodable (quantum) exponent of the 64-bit format.
+        public static let max: Decimal.Exponent = 369
 
-        /// The minimum encodable exponent of the 64-bit format.
-        public static let min: Decimal.Exponent = -383
+        /// The minimum encodable (quantum) exponent of the 64-bit format.
+        public static let min: Decimal.Exponent = -398
 
         /// The bias added to the exponent when encoding the 64-bit format.
         public static let bias: Int = 398
+
+        /// The maximum exponent of the scientific (normalized) range, Emax.
+        public static let scientificMax: Decimal.Exponent = 384
+
+        /// The minimum exponent of the scientific (normalized) range, Emin.
+        public static let scientificMin: Decimal.Exponent = -383
     }
 
     /// The exponent range and bias of the 128-bit decimal format.
+    ///
+    /// See ``Format32`` for the quantum-vs-scientific distinction.
     public enum Format128 {
-        /// The maximum encodable exponent of the 128-bit format.
-        public static let max: Decimal.Exponent = 6144
+        /// The maximum encodable (quantum) exponent of the 128-bit format.
+        public static let max: Decimal.Exponent = 6111
 
-        /// The minimum encodable exponent of the 128-bit format.
-        public static let min: Decimal.Exponent = -6143
+        /// The minimum encodable (quantum) exponent of the 128-bit format.
+        public static let min: Decimal.Exponent = -6176
 
         /// The bias added to the exponent when encoding the 128-bit format.
         public static let bias: Int = 6176
+
+        /// The maximum exponent of the scientific (normalized) range, Emax.
+        public static let scientificMax: Decimal.Exponent = 6144
+
+        /// The minimum exponent of the scientific (normalized) range, Emin.
+        public static let scientificMin: Decimal.Exponent = -6143
     }
 }

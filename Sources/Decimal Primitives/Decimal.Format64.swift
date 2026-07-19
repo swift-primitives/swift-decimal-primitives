@@ -177,6 +177,9 @@ extension Decimal.Format64 {
     /// Encodes a finite value from its sign, exponent, and coefficient.
     ///
     /// - Precondition: `coefficient <= coefficientMax()`.
+    /// - Precondition: `exponent` is within `minExponent...maxExponent` (the
+    ///   quantum range); values outside it produce a non-canonical encoding
+    ///   rather than a trap.
     @inlinable
     public static func encode(
         sign: Decimal.Sign,
