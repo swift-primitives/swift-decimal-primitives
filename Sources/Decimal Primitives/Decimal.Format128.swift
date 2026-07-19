@@ -98,8 +98,9 @@ extension Decimal.Format128 {
         let g0g1 = (high >> 61) & 0x3
         if g0g1 == 0x3 {
             let g2 = (high >> 60) & 0x1
-            if g2 == 1 {
-                // Infinity or NaN
+            let g3 = (high >> 59) & 0x1
+            if g2 == 1, g3 == 1 {
+                // Infinity or NaN (combination field >= 0x1E)
                 return Decimal.Exponent(0)
             }
             // Form 2: exponent in bits 59-46 of high
@@ -118,8 +119,9 @@ extension Decimal.Format128 {
         let g0g1 = (high >> 61) & 0x3
         if g0g1 == 0x3 {
             let g2 = (high >> 60) & 0x1
-            if g2 == 1 {
-                // Infinity or NaN - coefficient is payload
+            let g3 = (high >> 59) & 0x1
+            if g2 == 1, g3 == 1 {
+                // Infinity or NaN (combination field >= 0x1E) - coefficient is payload
                 let highPart = high & 0x0000_FFFF_FFFF_FFFF
                 return (UInt128(highPart) << 64) | UInt128(low)
             }

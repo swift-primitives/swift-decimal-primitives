@@ -130,12 +130,13 @@ extension Decimal.Format64 {
         if g0g1 == 0x3 {
             // Could be Form 2 or special value
             let g2 = (bits >> 60) & 0x1
-            if g2 == 1 {
-                // Infinity or NaN - exponent not meaningful
+            let g3 = (bits >> 59) & 0x1
+            if g2 == 1, g3 == 1 {
+                // Infinity or NaN (combination field >= 0x1E) - exponent not meaningful
                 return Decimal.Exponent(0)
             }
-            // Form 2: exponent in bits 59-50
-            let biasedExponent = Int((bits >> 50) & 0x3FF)
+            // Form 2: exponent in bits 60-51
+            let biasedExponent = Int((bits >> 51) & 0x3FF)
             return Decimal.Exponent(biasedExponent - Self.bias)
         }
 
@@ -151,8 +152,9 @@ extension Decimal.Format64 {
         if g0g1 == 0x3 {
             // Could be Form 2 or special value
             let g2 = (bits >> 60) & 0x1
-            if g2 == 1 {
-                // Infinity or NaN - coefficient is payload
+            let g3 = (bits >> 59) & 0x1
+            if g2 == 1, g3 == 1 {
+                // Infinity or NaN (combination field >= 0x1E) - coefficient is payload
                 return bits & 0x0003_FFFF_FFFF_FFFF
             }
             // Form 2: coefficient has implied 100 prefix
