@@ -1,33 +1,54 @@
 // MARK: - Decimal.Format64 ← Integer
 
 extension Decimal.Format64 {
-    /// Initialize from a signed 64-bit integer, exact within the format's precision.
-    public init(_ value: Int64) {
+    /// Initialize from a signed 64-bit integer, if exactly representable.
+    ///
+    /// Returns `nil` when the value has more significant digits than
+    /// this format's precision (16 decimal digits) even after removing
+    /// trailing zeros (e.g. magnitudes above `10^16 - 1` that are not a
+    /// multiple of a power of ten small enough to bring them into range).
+    public init?(_ value: Int64) {
         if value == 0 {
             self = .zero()
             return
         }
 
         let sign: Decimal.Sign = value < 0 ? .negative : .positive
-        let magnitude = value < 0 ? UInt64(bitPattern: -value) : UInt64(value)
+        // `.magnitude` is exact for every `Int64`, including `Int64.min`
+        // (never traps, unlike negating the bit pattern of `-Int64.min`).
+        var coefficient = value.magnitude
+        var exponent = 0
 
-        self = Self.encode(sign: sign, exponent: 0, coefficient: magnitude)
+        while coefficient > Self.coefficientMax() {
+            guard coefficient % 10 == 0 else { return nil }
+            coefficient /= 10
+            exponent += 1
+        }
+
+        self = Self.encode(sign: sign, exponent: Decimal.Exponent(exponent), coefficient: coefficient)
     }
 
-    /// Initialize from an unsigned 64-bit integer, exact within the format's precision.
-    public init(_ value: UInt64) {
+    /// Initialize from an unsigned 64-bit integer, if exactly representable.
+    ///
+    /// Returns `nil` when the value has more significant digits than
+    /// this format's precision (16 decimal digits) even after removing
+    /// trailing zeros.
+    public init?(_ value: UInt64) {
         if value == 0 {
             self = .zero()
             return
         }
 
-        // Check if value fits in 16 decimal digits
-        if value > 9_999_999_999_999_999 {
-            // Value too large - would need to adjust exponent
-            fatalError("Value too large for exact representation")
+        var coefficient = value
+        var exponent = 0
+
+        while coefficient > Self.coefficientMax() {
+            guard coefficient % 10 == 0 else { return nil }
+            coefficient /= 10
+            exponent += 1
         }
 
-        self = Self.encode(sign: .positive, exponent: 0, coefficient: value)
+        self = Self.encode(sign: .positive, exponent: Decimal.Exponent(exponent), coefficient: coefficient)
     }
 }
 
@@ -69,7 +90,10 @@ extension Int64 {
                 if integerPart > UInt64(Self.max) + 1 {
                     return nil
                 }
-                self = -Int64(integerPart)
+                // Negate via the bit pattern: `integerPart` may equal
+                // `UInt64(Self.max) + 1` (`Int64.min`'s magnitude), which
+                // `-Int64(integerPart)` would trap on constructing.
+                self = Int64(bitPattern: 0 &- integerPart)
             } else {
                 if integerPart > UInt64(Self.max) {
                     return nil
@@ -90,7 +114,9 @@ extension Int64 {
                 if result > UInt64(Self.max) + 1 {
                     return nil
                 }
-                self = -Int64(result)
+                // See the exponent < 0 branch above: avoid trapping when
+                // `result` is exactly `Int64.min`'s magnitude.
+                self = Int64(bitPattern: 0 &- result)
             } else {
                 if result > UInt64(Self.max) {
                     return nil
@@ -103,7 +129,9 @@ extension Int64 {
                 if coefficient > UInt64(Self.max) + 1 {
                     return nil
                 }
-                self = -Int64(coefficient)
+                // See the exponent < 0 branch above: avoid trapping when
+                // `coefficient` is exactly `Int64.min`'s magnitude.
+                self = Int64(bitPattern: 0 &- coefficient)
             } else {
                 if coefficient > UInt64(Self.max) {
                     return nil

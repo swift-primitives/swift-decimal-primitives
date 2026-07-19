@@ -9,9 +9,9 @@ extension Decimal.Format128 {
         }
 
         let sign: Decimal.Sign = value < 0 ? .negative : .positive
-        let magnitude = value < 0 ? UInt64(bitPattern: -value) : UInt64(value)
-
-        self = Self.encode(sign: sign, exponent: 0, coefficient: UInt128(magnitude))
+        // `.magnitude` is exact for every `Int64`, including `Int64.min`
+        // (never traps, unlike negating the bit pattern of `-Int64.min`).
+        self = Self.encode(sign: sign, exponent: 0, coefficient: UInt128(value.magnitude))
     }
 
     /// Initialize from an unsigned 64-bit integer, exact within the format's precision.
@@ -63,7 +63,10 @@ extension Int64 {
                 if integerPart > maxInt64AsUInt128 + 1 {
                     return nil
                 }
-                self = -Int64(UInt64(truncatingIfNeeded: integerPart))
+                // Negate via the bit pattern: `integerPart` may equal
+                // `maxInt64AsUInt128 + 1` (`Int64.min`'s magnitude), which
+                // `-Int64(...)` would trap on constructing.
+                self = Int64(bitPattern: 0 &- UInt64(truncatingIfNeeded: integerPart))
             } else {
                 if integerPart > maxInt64AsUInt128 {
                     return nil
@@ -85,7 +88,9 @@ extension Int64 {
                 if result > maxInt64AsUInt128 + 1 {
                     return nil
                 }
-                self = -Int64(UInt64(truncatingIfNeeded: result))
+                // See the exponent < 0 branch above: avoid trapping when
+                // `result` is exactly `Int64.min`'s magnitude.
+                self = Int64(bitPattern: 0 &- UInt64(truncatingIfNeeded: result))
             } else {
                 if result > maxInt64AsUInt128 {
                     return nil
@@ -98,7 +103,9 @@ extension Int64 {
                 if coefficient > maxInt64AsUInt128 + 1 {
                     return nil
                 }
-                self = -Int64(UInt64(truncatingIfNeeded: coefficient))
+                // See the exponent < 0 branch above: avoid trapping when
+                // `coefficient` is exactly `Int64.min`'s magnitude.
+                self = Int64(bitPattern: 0 &- UInt64(truncatingIfNeeded: coefficient))
             } else {
                 if coefficient > maxInt64AsUInt128 {
                     return nil
