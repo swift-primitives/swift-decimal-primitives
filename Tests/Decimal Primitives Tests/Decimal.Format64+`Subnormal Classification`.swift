@@ -50,6 +50,7 @@ extension Decimal.Format64.`Subnormal Classification`.`Edge Case` {
     }
 
     /// F-003: subnormal classification is about magnitude (digit count vs.
+    ///
     /// exponent), not merely "is the exponent at its minimum" — a
     /// full-precision coefficient one exponent step above the minimum must
     /// still be normal.

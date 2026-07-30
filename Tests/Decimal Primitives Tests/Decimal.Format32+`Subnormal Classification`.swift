@@ -49,6 +49,7 @@ extension Decimal.Format32.`Subnormal Classification`.`Edge Case` {
     }
 
     /// F-003: subnormal classification is about magnitude (digit count vs.
+    ///
     /// exponent), not merely "is the exponent at its minimum" — a
     /// low-digit-count coefficient one exponent step above the minimum is
     /// still deeply subnormal, which the old exact-equality exponent check
