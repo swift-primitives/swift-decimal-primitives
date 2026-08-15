@@ -21,7 +21,11 @@ extension Decimal.Format32 {
             exponent += 1
         }
 
-        self = Self.encode(sign: sign, exponent: Decimal.Exponent(exponent), coefficient: coefficient)
+        self = Self.encode(
+            sign: sign,
+            exponent: Decimal.Exponent(exponent),
+            coefficient: coefficient
+        )
     }
 
     /// Initialize from UInt32, if exactly representable.
@@ -43,7 +47,11 @@ extension Decimal.Format32 {
             exponent += 1
         }
 
-        self = Self.encode(sign: .positive, exponent: Decimal.Exponent(exponent), coefficient: coefficient)
+        self = Self.encode(
+            sign: .positive,
+            exponent: Decimal.Exponent(exponent),
+            coefficient: coefficient
+        )
     }
 }
 
