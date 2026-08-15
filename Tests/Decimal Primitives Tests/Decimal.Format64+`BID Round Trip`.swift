@@ -20,7 +20,11 @@ extension Decimal.Format64.`BID Round Trip`.`Edge Case` {
         // biased exponent 600 = 0b10_0101_1000 -> top two bits (G2, G3) = (1, 0)
         let exponent = Decimal.Exponent(202)
         let coefficient = Decimal.Format64.coefficientMax()  // forces Form 2 (> 2^53 - 1)
-        let encoded = Decimal.Format64.encode(sign: .positive, exponent: exponent, coefficient: coefficient)
+        let encoded = Decimal.Format64.encode(
+            sign: .positive,
+            exponent: exponent,
+            coefficient: coefficient
+        )
 
         #expect(encoded.classification == .normal)
         #expect(!encoded.test.infinite)
@@ -40,7 +44,11 @@ extension Decimal.Format64.`BID Round Trip`.`Edge Case` {
         ]
 
         for coefficient in coefficients {
-            let encoded = Decimal.Format64.encode(sign: .positive, exponent: exponent, coefficient: coefficient)
+            let encoded = Decimal.Format64.encode(
+                sign: .positive,
+                exponent: exponent,
+                coefficient: coefficient
+            )
             #expect(encoded.extractExponent() == exponent)
             #expect(encoded.extractCoefficient() == coefficient)
         }

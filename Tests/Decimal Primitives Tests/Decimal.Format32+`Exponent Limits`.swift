@@ -29,7 +29,11 @@ extension Decimal.Format32.`Exponent Limits`.`Edge Case` {
     @Test func roundTripsAtQuantumMaximum() {
         let exponent = Decimal.Exponent(90)
         let coefficient: UInt32 = 1234
-        let encoded = Decimal.Format32.encode(sign: .positive, exponent: exponent, coefficient: coefficient)
+        let encoded = Decimal.Format32.encode(
+            sign: .positive,
+            exponent: exponent,
+            coefficient: coefficient
+        )
 
         #expect(encoded.extractExponent() == exponent)
         #expect(exponent <= Decimal.Format32.maxExponent)

@@ -25,7 +25,11 @@ extension Decimal.Format64 {
             exponent += 1
         }
 
-        self = Self.encode(sign: sign, exponent: Decimal.Exponent(exponent), coefficient: coefficient)
+        self = Self.encode(
+            sign: sign,
+            exponent: Decimal.Exponent(exponent),
+            coefficient: coefficient
+        )
     }
 
     /// Initialize from an unsigned 64-bit integer, if exactly representable.
@@ -48,7 +52,11 @@ extension Decimal.Format64 {
             exponent += 1
         }
 
-        self = Self.encode(sign: .positive, exponent: Decimal.Exponent(exponent), coefficient: coefficient)
+        self = Self.encode(
+            sign: .positive,
+            exponent: Decimal.Exponent(exponent),
+            coefficient: coefficient
+        )
     }
 }
 

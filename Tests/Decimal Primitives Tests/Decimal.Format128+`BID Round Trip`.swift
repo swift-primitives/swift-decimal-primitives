@@ -30,7 +30,8 @@ extension Decimal.Format128.`BID Round Trip`.`Edge Case` {
         let low: UInt64 = 0x1234_5678_9ABC_DEF0
 
         let value = Decimal.Format128(high: high, low: low)
-        let expectedCoefficient = (UInt128(coeffHighMasked | (UInt64(8) << 46)) << 64) | UInt128(low)
+        let expectedCoefficient =
+            (UInt128(coeffHighMasked | (UInt64(8) << 46)) << 64) | UInt128(low)
 
         #expect(value.classification == .normal)
         #expect(!value.test.infinite)
@@ -49,7 +50,11 @@ extension Decimal.Format128.`BID Round Trip`.`Edge Case` {
         ]
 
         for coefficient in coefficients {
-            let encoded = Decimal.Format128.encode(sign: .positive, exponent: exponent, coefficient: coefficient)
+            let encoded = Decimal.Format128.encode(
+                sign: .positive,
+                exponent: exponent,
+                coefficient: coefficient
+            )
             #expect(encoded.extractExponent() == exponent)
             #expect(encoded.extractCoefficient() == coefficient)
         }
