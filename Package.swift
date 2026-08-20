@@ -1,15 +1,15 @@
-// swift-tools-version: 6.3.3
+// swift-tools-version: 6.4
 
 import PackageDescription
 
 let package = Package(
     name: "swift-decimal-primitives",
     platforms: [
-        .macOS("27"),
-        .iOS("27"),
-        .tvOS("27"),
-        .watchOS("27"),
-        .visionOS("27")
+        .macOS(.v27),
+        .iOS(.v27),
+        .tvOS(.v27),
+        .watchOS(.v27),
+        .visionOS(.v27),
     ],
     products: [
         .library(name: "Decimal Primitives", targets: ["Decimal Primitives"]),
@@ -18,24 +18,22 @@ let package = Package(
             targets: ["Decimal Primitives Test Support"]
         ),
     ],
-    dependencies: [
-    ],
+    dependencies: [],
     targets: [
         .target(
             name: "Decimal Primitives",
-            dependencies: [
-            ],
+            dependencies: [],
             swiftSettings: [
                 .enableUpcomingFeature("ExistentialAny"),
                 .enableUpcomingFeature("InternalImportsByDefault"),
                 .enableUpcomingFeature("MemberImportVisibility"),
-                .strictMemorySafety()
+                .strictMemorySafety(),
             ]
         ),
         .target(
             name: "Decimal Primitives Test Support",
             dependencies: [
-                "Decimal Primitives",
+                "Decimal Primitives"
             ],
             path: "Tests/Support"
         ),
