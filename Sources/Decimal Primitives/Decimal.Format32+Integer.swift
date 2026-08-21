@@ -1,10 +1,5 @@
-// MARK: - Decimal.Format32 ← Integer
-
 extension Decimal.Format32 {
-    /// Initialize from Int32, if exactly representable.
-    ///
-    /// Returns `nil` when the value has more significant digits than
-    /// this format's precision (7 decimal digits).
+
     public init?(_ value: Int32) {
         if value == 0 {
             self = .zero()
@@ -28,10 +23,6 @@ extension Decimal.Format32 {
         )
     }
 
-    /// Initialize from UInt32, if exactly representable.
-    ///
-    /// Returns `nil` when the value has more significant digits than
-    /// this format's precision (7 decimal digits).
     public init?(_ value: UInt32) {
         if value == 0 {
             self = .zero()
@@ -55,12 +46,10 @@ extension Decimal.Format32 {
     }
 }
 
-// MARK: - Integer ← Decimal.Format32
-
 extension Int32 {
-    /// Initialize from a 32-bit decimal value, if exactly representable.
+
     public init?(exactly value: Decimal.Format32) {
-        // Check for special values
+
         if value.test.nan || value.test.infinite {
             return nil
         }
@@ -74,7 +63,7 @@ extension Int32 {
         let exponent = value.extractExponent()
 
         if Int(exponent) < 0 {
-            // Check if there would be a fractional part
+
             var divisor: UInt32 = 1
             for _ in 0..<(-Int(exponent)) {
                 let (newDivisor, overflow) = divisor.multipliedReportingOverflow(by: 10)
@@ -99,7 +88,7 @@ extension Int32 {
                 self = Int32(integerPart)
             }
         } else if Int(exponent) > 0 {
-            // Multiply by 10^exponent
+
             var result = coefficient
             for _ in 0..<Int(exponent) {
                 let (newResult, overflow) = result.multipliedReportingOverflow(by: 10)
@@ -120,7 +109,7 @@ extension Int32 {
                 self = Int32(result)
             }
         } else {
-            // Int(exponent) == 0
+
             if value.test.negative {
                 if coefficient > UInt32(Self.max) + 1 {
                     return nil
@@ -137,14 +126,13 @@ extension Int32 {
 }
 
 extension UInt32 {
-    /// Initialize from a 32-bit decimal value, if exactly representable.
+
     public init?(exactly value: Decimal.Format32) {
-        // Check for special values
+
         if value.test.nan || value.test.infinite {
             return nil
         }
 
-        // Negative values cannot be represented as UInt32
         if value.test.negative && !value.test.zero {
             return nil
         }
